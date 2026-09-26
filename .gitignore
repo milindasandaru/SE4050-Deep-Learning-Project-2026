@@ -1,0 +1,129 @@
+# Python
+**pycache**/
+*.py[cod]
+*$py.class
+*.so
+
+# Python virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+
+# Jupyter temporary files
+*.nbconvert.ipynb
+
+# Environment & Secrets
+
+.env
+.env.*
+!.env.example
+
+# Local configuration
+*.local
+
+# Machine Learning / Model Files
+
+# Trained models
+*.pkl
+*.pickle
+*.joblib
+*.h5
+*.keras
+*.pt
+*.pth
+*.onnx
+*.model
+
+# Model checkpoints
+checkpoints/
+models/checkpoints/
+
+# Experiment tracking
+mlruns/
+wandb/
+runs/
+
+# Data
+
+# Raw datasets
+data/raw/*
+!data/raw/.gitkeep
+
+# Processed datasets
+data/processed/*
+!data/processed/.gitkeep
+
+# Intermediate data
+data/interim/*
+!data/interim/.gitkeep
+
+# Logs
+logs/
+*.log
+
+# Reports / Generated Outputs
+reports/figures/*
+!reports/figures/.gitkeep
+
+outputs/
+results/
+
+# Cache
+.cache/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# IDE / Editors
+.vscode/
+.idea/
+
+# VS Code settings (optional)
+*.code-workspace
+
+# Operating System
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+Desktop.ini
+
+# macOS
+.DS_Store
+
+# Linux
+*~
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+
+# Temporary Python files
+*.bak
+
+# Secrets / Credentials
+*.pem
+*.key
+credentials.json
+secrets.json
+token.json
+
+# Local databases
+*.db
+*.sqlite
+*.sqlite3
