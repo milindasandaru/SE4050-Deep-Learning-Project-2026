@@ -13,69 +13,156 @@ from sklearn.metrics import (
 )
 
 
-def calculate_metrics(y_true, y_prob, threshold=0.5):
+# Dataset label convention:
+# 0 = Phishing
+# 1 = Legitimate
+
+
+def calculate_metrics(y_true, y_prob_legitimate, threshold=0.5):
     """
-    Calculate standard binary classification metrics.
+    Calculate binary classification metrics with Phishing (class 0)
+    treated as the positive class.
 
     Parameters
     ----------
     y_true : array-like
-        True labels (0 or 1)
-    y_prob : array-like
-        Predicted probabilities for class 1
+        True labels:
+        0 = Phishing
+        1 = Legitimate
+
+    y_prob_legitimate : array-like
+        Model probability for class 1 (Legitimate).
+
     threshold : float
-        Probability threshold for converting probabilities to labels
+        Probability threshold for classifying Legitimate.
 
     Returns
     -------
     dict
-        Classification metrics
+        Accuracy, phishing precision, phishing recall,
+        phishing F1-score and phishing ROC-AUC.
     """
 
-    y_prob = np.asarray(y_prob).ravel()
-    y_pred = (y_prob >= threshold).astype(int)
+    y_true = np.asarray(y_true).ravel()
+    y_prob_legitimate = np.asarray(y_prob_legitimate).ravel()
+
+    # Keras sigmoid output represents P(class 1) = P(Legitimate)
+    #
+    # Therefore:
+    # P(Phishing) = 1 - P(Legitimate)
+    y_prob_phishing = 1.0 - y_prob_legitimate
+
+    # Class prediction:
+    # probability of Legitimate >= threshold -> 1
+    # otherwise -> 0 (Phishing)
+    y_pred = (y_prob_legitimate >= threshold).astype(int)
+
+    # Treat Phishing (class 0) as the positive class.
+    y_true_phishing = (y_true == 0).astype(int)
+    y_pred_phishing = (y_pred == 0).astype(int)
 
     metrics = {
         "accuracy": accuracy_score(y_true, y_pred),
-        "precision": precision_score(y_true, y_pred, zero_division=0),
-        "recall": recall_score(y_true, y_pred, zero_division=0),
-        "f1": f1_score(y_true, y_pred, zero_division=0),
-        "roc_auc": roc_auc_score(y_true, y_prob)
+
+        "precision": precision_score(
+            y_true_phishing,
+            y_pred_phishing,
+            zero_division=0
+        ),
+
+        "recall": recall_score(
+            y_true_phishing,
+            y_pred_phishing,
+            zero_division=0
+        ),
+
+        "f1": f1_score(
+            y_true_phishing,
+            y_pred_phishing,
+            zero_division=0
+        ),
+
+        "roc_auc": roc_auc_score(
+            y_true_phishing,
+            y_prob_phishing
+        )
     }
 
     return metrics
 
 
-def plot_confusion_matrix(y_true, y_prob, title="Confusion Matrix"):
+def plot_confusion_matrix(
+    y_true,
+    y_prob_legitimate,
+    title="Confusion Matrix"
+):
     """
-    Plot confusion matrix.
+    Plot confusion matrix using the actual dataset label convention.
+
+    Class mapping:
+    0 = Phishing
+    1 = Legitimate
     """
 
-    y_prob = np.asarray(y_prob).ravel()
-    y_pred = (y_prob >= 0.5).astype(int)
+    y_true = np.asarray(y_true).ravel()
+    y_prob_legitimate = np.asarray(y_prob_legitimate).ravel()
 
-    cm = confusion_matrix(y_true, y_pred)
+    y_pred = (y_prob_legitimate >= 0.5).astype(int)
+
+    cm = confusion_matrix(
+        y_true,
+        y_pred,
+        labels=[0, 1]
+    )
 
     disp = ConfusionMatrixDisplay(
         confusion_matrix=cm,
-        display_labels=["Legitimate", "Phishing"]
+        display_labels=["Phishing", "Legitimate"]
     )
 
     disp.plot(cmap="Blues")
+
     plt.title(title)
+    plt.xlabel("Predicted Label")
+    plt.ylabel("True Label")
     plt.tight_layout()
     plt.show()
 
 
-def plot_roc_curve(y_true, y_prob, title="ROC Curve"):
+def plot_roc_curve(
+    y_true,
+    y_prob_legitimate,
+    title="ROC Curve"
+):
     """
-    Plot ROC curve.
+    Plot ROC curve for detecting Phishing.
+
+    Since the model outputs P(Legitimate), the phishing
+    probability is calculated as:
+
+        P(Phishing) = 1 - P(Legitimate)
     """
 
-    y_prob = np.asarray(y_prob).ravel()
+    y_true = np.asarray(y_true).ravel()
+    y_prob_legitimate = np.asarray(y_prob_legitimate).ravel()
 
-    fpr, tpr, _ = roc_curve(y_true, y_prob)
-    auc = roc_auc_score(y_true, y_prob)
+    # Convert to phishing probability.
+    y_prob_phishing = 1.0 - y_prob_legitimate
+
+    # Convert labels so:
+    # 1 = Phishing
+    # 0 = Legitimate
+    y_true_phishing = (y_true == 0).astype(int)
+
+    fpr, tpr, _ = roc_curve(
+        y_true_phishing,
+        y_prob_phishing
+    )
+
+    auc = roc_auc_score(
+        y_true_phishing,
+        y_prob_phishing
+    )
 
     plt.figure(figsize=(7, 5))
 
@@ -89,7 +176,8 @@ def plot_roc_curve(y_true, y_prob, title="ROC Curve"):
         [0, 1],
         [0, 1],
         linestyle="--",
-        color="gray"
+        color="gray",
+        label="Random Classifier"
     )
 
     plt.xlabel("False Positive Rate")
@@ -101,14 +189,21 @@ def plot_roc_curve(y_true, y_prob, title="ROC Curve"):
     plt.show()
 
 
-def plot_training_history(history, title="Training History"):
+def plot_training_history(
+    history,
+    title="Training History"
+):
     """
     Plot training and validation accuracy/loss.
     """
 
     history_dict = history.history
 
-    fig, axes = plt.subplots(1, 2, figsize=(12, 4))
+    fig, axes = plt.subplots(
+        1,
+        2,
+        figsize=(12, 4)
+    )
 
     # Accuracy
     axes[0].plot(
@@ -147,3 +242,4 @@ def plot_training_history(history, title="Training History"):
     fig.suptitle(title)
     plt.tight_layout()
     plt.show()
+
