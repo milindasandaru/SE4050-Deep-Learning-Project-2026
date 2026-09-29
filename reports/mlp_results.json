@@ -1,0 +1,15 @@
+{
+  "model": "MLP",
+  "epochs_ran": 26,
+  "training_time_sec": 95.6,
+  "trainable_parameters": 16897,
+  "final_train_accuracy": 0.9999394416809082,
+  "final_val_accuracy": 0.9999434351921082,
+  "final_train_loss": 0.00024368480080738664,
+  "final_val_loss": 0.00039537178236059844,
+  "test_accuracy": 0.9999151823579304,
+  "test_precision": 0.9998517127181059,
+  "test_recall": 1.0,
+  "test_f1": 0.9999258508613659,
+  "test_roc_auc": 0.9999999085840778
+}
