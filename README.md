@@ -31,7 +31,74 @@ The four architectures implemented are:
    cd SE4050-Deep-Learning-Project-2026
    ```
 
+2. **Create and activate virtual environment:**
+   ```bash
+   python -m venv venv
+   # On Windows:
+   .\venv\Scripts\activate
+   # On Linux/macOS:
+   source venv/bin/activate
+   ```
+
+3. **Install dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. **Run the Notebooks in sequence:**
+   - `01_EDA.ipynb`: Exploratory data analysis
+   - `02_preprocessing.ipynb`: Data splitting (70/15/15) and StandardScaler fitting
+   - `03_MLP.ipynb`: Multi-Layer Perceptron model
+   - `04_CNN1D.ipynb`: 1D Convolutional Neural Network & Hyperparameter Tuning
+   - `05_LSTM.ipynb`: Long Short-Term Memory model
+   - `06_GRU.ipynb`: Gated Recurrent Unit model
+
 ---
+
+## 1D CNN Model (Architecture & Tuning)
+
+**Module:** `models/cnn1d.py`  
+**Notebook:** `notebooks/04_CNN1D.ipynb`  
+**Lead:** Milinda Sandaruwan
+
+### Architecture Overview
+The 1D CNN processes 50 tabular attributes reshaped into a tensor `(samples, 50, 1)`. The model features modular parameterization via `build_cnn1d()` to support controlled ablation and tuning.
+
+```
+Input (50, 1)
+   -> Conv1D(32, kernel_size=3, ReLU)
+   -> MaxPooling1D(pool_size=2)
+   -> Conv1D(64, kernel_size=3, ReLU)
+   -> MaxPooling1D(pool_size=2)
+   -> Flatten()
+   -> Dense(64, ReLU)
+   -> Dropout(0.3)
+   -> Dense(1, Sigmoid)
+```
+
+**Total Trainable Parameters:** 51,521 (Baseline)
+
+### Controlled Hyperparameter Tuning
+We conducted systematic controlled experiments recorded in `results/cnn1d/tuning/experiments.csv`:
+
+| Experiment ID | Architecture / Variation | Parameters | Best Val Loss | Test Accuracy | Test Precision (Phishing) | Test Recall (Phishing) | Test F1-Score |
+|---|---|---|---|---|---|---|---|
+| **EXP-01_baseline** | Conv(32→64), k=3, Dense=64 | **51,521** | **0.000152** | **0.999887** | **1.000000** | **0.999736** | **0.999868** |
+| **EXP-02_wider_filters** | Conv(64→128), k=3, Dense=64 | 115,201 | 0.000214 | 0.999887 | 1.000000 | 0.999736 | 0.999868 |
+| **EXP-03_deeper_3layers** | Conv(32→64→128), k=3, Dense=64 | 63,937 | 0.000156 | 0.999915 | 1.000000 | 0.999802 | 0.999901 |
+| **EXP-04_kernel_size_5** | Conv(32→64), k=5, Dense=64 | 47,489 | 0.000338 | 0.999802 | 0.999868 | 0.999670 | 0.999769 |
+| **EXP-05_dense_128** | Conv(32→64), k=3, Dense=128 | 96,705 | 0.000169 | 0.999887 | 1.000000 | 0.999736 | 0.999868 |
+
+*Key finding:* The baseline architecture (`EXP-01`) achieved the lowest validation loss (0.000152) while preserving computational efficiency (51k parameters vs 115k).
+
+### Output Artifacts
+All 1D CNN artifacts are structured under `results/cnn1d/`:
+- `results/cnn1d/baseline/`: Baseline `metrics.json`, `history.json`, `confusion_matrix.png`, `roc_curve.png`, `training_history.png`
+- `results/cnn1d/tuning/`: `experiments.csv` (complete parameter & metric logs)
+- `results/cnn1d/final/`: Final model `config.json`, `metrics.json`, `cnn1d_final_model.keras`, and evaluation visual plots
+
+---
+
 
 ## LSTM Model
 
