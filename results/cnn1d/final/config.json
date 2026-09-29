@@ -1,0 +1,14 @@
+{
+  "experiment_id": "EXP-01_baseline",
+  "description": "Baseline: Conv(32->64), k=3, Dense=64, drop=0.3, lr=0.001, bs=256",
+  "conv1_filters": 32,
+  "conv2_filters": 64,
+  "conv3_filters": null,
+  "kernel_size": 3,
+  "dense_units": 64,
+  "dropout": 0.3,
+  "learning_rate": 0.001,
+  "batch_size": 256,
+  "patience": 3,
+  "max_epochs": 10
+}

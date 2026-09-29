@@ -77,7 +77,14 @@ reports/figures/*
 !reports/figures/.gitkeep
 
 outputs/
-results/
+results/*
+!results/cnn1d/
+!results/cnn1d/**
+!results/tables/
+!results/tables/**
+!results/figures/
+!results/figures/**
+!results/lstm_*
 
 # Cache
 .cache/
