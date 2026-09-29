@@ -46,7 +46,7 @@ def calculate_metrics(y_true, y_prob, threshold=0.5):
     return metrics
 
 
-def plot_confusion_matrix(y_true, y_prob, title="Confusion Matrix"):
+def plot_confusion_matrix(y_true, y_prob, title="Confusion Matrix", save_path=None):
     """
     Plot confusion matrix.
     """
@@ -64,10 +64,12 @@ def plot_confusion_matrix(y_true, y_prob, title="Confusion Matrix"):
     disp.plot(cmap="Blues")
     plt.title(title)
     plt.tight_layout()
+    if save_path:
+        plt.savefig(save_path, dpi=200, bbox_inches="tight")
     plt.show()
 
 
-def plot_roc_curve(y_true, y_prob, title="ROC Curve"):
+def plot_roc_curve(y_true, y_prob, title="ROC Curve", save_path=None):
     """
     Plot ROC curve.
     """
@@ -98,10 +100,12 @@ def plot_roc_curve(y_true, y_prob, title="ROC Curve"):
     plt.legend()
     plt.grid(alpha=0.3)
     plt.tight_layout()
+    if save_path:
+        plt.savefig(save_path, dpi=200, bbox_inches="tight")
     plt.show()
 
 
-def plot_training_history(history, title="Training History"):
+def plot_training_history(history, title="Training History", save_path=None):
     """
     Plot training and validation accuracy/loss.
     """
@@ -146,4 +150,6 @@ def plot_training_history(history, title="Training History"):
 
     fig.suptitle(title)
     plt.tight_layout()
+    if save_path:
+        plt.savefig(save_path, dpi=200, bbox_inches="tight")
     plt.show()
