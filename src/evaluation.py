@@ -176,4 +176,4 @@ def plot_training_history(history, title="Training History", save_path=None):
     if save_path:
         plt.savefig(save_path, dpi=150, bbox_inches="tight")
     plt.show()
-    plt.close()
+    plt.close()
