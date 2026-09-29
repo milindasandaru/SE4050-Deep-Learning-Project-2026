@@ -1,7 +1,7 @@
 # SE4050 Deep Learning: Phishing Website Detection
 
 ## Overview
-This repository contains an end-to-end deep learning framework designed to detect phishing websites using engineered URL and webpage features. We benchmark four distinct deep learning architectures under identical experimental conditions to critically evaluate their predictive performance, generalization, and computational efficiency for the SE4050 assignment. 
+This repository contains an end-to-end deep learning framework designed to detect phishing websites using engineered URL and webpage features. We benchmark four distinct deep learning architectures under identical experimental conditions to critically evaluate their predictive performance, generalization, and computational efficiency for the SE4050 assignment.
 
 The four architectures implemented are:
 1. Multi-Layer Perceptron (MLP)
@@ -11,7 +11,7 @@ The four architectures implemented are:
 
 ## Dataset
 **Dataset:** [PhiUSIIL Phishing URL Dataset](https://archive.ics.uci.edu/dataset/967/phiusiil+phishing+url+dataset) (UCI Machine Learning Repository)
-*   The project strictly utilizes 50 engineered numerical features. 
+*   The project strictly utilizes 50 engineered numerical features.
 *   High-cardinality text attributes (e.g., `FILENAME`, `URL`, `Domain`) were excluded to maintain a controlled tabular environment.
 *   To prevent data leakage, all preprocessing transformations (e.g., `StandardScaler`) were fitted exclusively on the training split before transforming the validation and unseen test sets.
 
@@ -21,11 +21,122 @@ The four architectures implemented are:
 *   `src/`: Shared Python scripts for modular scaling pipelines and unified evaluation metrics.
 *   `models/`: Serialized model weights (`.h5`) and architecture definitions.
 *   `results/`: Exported confusion matrices, ROC curves, loss/accuracy learning curves, and evaluation CSVs.
-*   `requirements.txt`: Python package dependencies required for exact reproducibility[cite: 2].
+*   `requirements.txt`: Python package dependencies required for exact reproducibility.
 *   `report/`: Final PDF documentation and Turnitin similarity reports.
 
 ## Setup and Execution Instructions
 1. **Clone the repository:**
    ```bash
-   git clone [https://github.com/your-username/se4050-phishing-deep-learning.git](https://github.com/your-username/se4050-phishing-deep-learning.git)
-   cd se4050-phishing-deep-learning
+   git clone https://github.com/milindasandaru/SE4050-Deep-Learning-Project-2026.git
+   cd SE4050-Deep-Learning-Project-2026
+   ```
+
+---
+
+## LSTM Model
+
+**Notebook:** `notebooks/05_LSTM.ipynb`
+
+### Why an LSTM?
+An LSTM (Long Short-Term Memory) is a recurrent neural network that reads data step by step and keeps a memory of what it has seen. Its gates (input, forget, output) decide what to remember and what to discard, which avoids the vanishing gradient problem of plain RNNs.
+
+Our data is tabular, so we treat the 50 features of each website as a sequence of 50 time steps with 1 value each. Inputs are reshaped from `(rows, 50)` to `(rows, 50, 1)`. This lets us compare the LSTM fairly with the MLP, 1D CNN, and GRU on exactly the same split.
+
+### Data split
+The data was scaled and split in `02_preprocessing.ipynb`, so all models share the same split.
+
+| Split | Rows | Purpose |
+|---|---|---|
+| Train | 165,056 | Learning the weights |
+| Validation | 35,369 | Early stopping |
+| Test | 35,370 | Final evaluation (used once) |
+
+### Architecture
+
+```
+Input (50, 1)
+   -> LSTM(64)
+   -> Dropout(0.3)
+   -> Dense(32, ReLU)
+   -> Dropout(0.3)
+   -> Dense(1, Sigmoid)
+```
+
+| Layer | Purpose |
+|---|---|
+| `LSTM(64)` | Reads the 50-step sequence and outputs a 64-value summary |
+| `Dropout(0.3)` | Randomly switches off 30% of units in training to reduce overfitting |
+| `Dense(32, ReLU)` | Learns non-linear combinations of the LSTM output |
+| `Dense(1, Sigmoid)` | Outputs a probability (closer to 1 means legitimate) |
+
+**Total parameters:** 19,009.
+
+### Training setup
+
+| Setting | Value |
+|---|---|
+| Optimizer | Adam |
+| Loss | Binary cross-entropy |
+| Batch size | 256 |
+| Max epochs | 50 |
+| Early stopping | Monitor `val_loss`, patience 5, restore best weights |
+| Random seed | 42 |
+| Decision threshold | 0.5 |
+| Hardware | Google Colab, T4 GPU |
+
+Early stopping ended training after **12 epochs** (best weights from epoch 7) in about **76.6 seconds**.
+
+### Results
+The model was evaluated once on the held-out test set.
+
+| Metric | Score |
+|---|---|
+| Accuracy | 0.99969 |
+| Precision | 0.99956 |
+| Recall | 0.99990 |
+| F1-score | 0.99973 |
+| ROC-AUC | 0.99999 |
+| Parameters | 19,009 |
+| Training time | 76.6 s |
+| Epochs run | 12 |
+
+#### Learning curves
+
+![LSTM learning curves](results/lstm_learning_curves.png)
+
+- **Loss (left):** training and validation loss drop quickly in the first 2 epochs, then flatten near zero.
+- **Accuracy (right):** both curves reach about 99.9% and stay together.
+- The two curves stay close, so the model is **not overfitting**. The small bumps in validation loss are normal noise, handled by early stopping and restoring the best weights.
+
+#### Confusion matrix
+
+![LSTM confusion matrix](results/lstm_confusion_matrix.png)
+
+| | Predicted Phishing | Predicted Legitimate |
+|---|---|---|
+| **Actually Phishing** | 15,133 (TN) | 9 (FP) |
+| **Actually Legitimate** | 2 (FN) | 20,226 (TP) |
+
+Only **11 of 35,370** test websites were misclassified.
+- **9 phishing sites were labelled legitimate.** This is the riskier error in security, since a phishing site gets through. Phishing recall is 15,133 / 15,142, about **99.94%**.
+- **2 legitimate sites were flagged as phishing.** This is the less harmful error (a false alarm).
+
+*Legitimate (1) is the positive class, so FP/FN in the metrics file follow that convention.*
+
+### LSTM output files
+All saved in `results/`:
+
+| File | Contents |
+|---|---|
+| `lstm_metrics.json` | Final test metrics and confusion matrix counts |
+| `lstm_history.json` | Loss and accuracy per epoch (train and validation) |
+| `lstm_learning_curves.png` | Learning curves plot |
+| `lstm_confusion_matrix.png` | Confusion matrix plot |
+| `lstm_test_proba.npy` | Predicted test probabilities (for ROC curves and model comparison) |
+
+### Reproducing the LSTM results
+1. Open `notebooks/05_LSTM.ipynb` in Google Colab (GPU runtime recommended).
+2. Upload `X_train.npy`, `y_train.npy`, `X_val.npy`, `y_val.npy`, `X_test.npy`, `y_test.npy` to `/content`.
+3. Run all cells. Results are saved as `lstm_*` files.
+
+The seed is fixed (42), but GPU training can still shift counts by a few samples between runs.
